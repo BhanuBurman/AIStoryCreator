@@ -12,7 +12,7 @@ class BaseImageGenerator(ABC):
         """Returns metadata including local file path and URL to the generated image."""
         pass
 
-# 1. Zero-setup immediate generator (High quality, uses Flux under the hood)
+# 1. Zero-setup immediate generator with uncensored safety bypass
 class PollinationsImageGenerator(BaseImageGenerator):
     def __init__(self, output_dir: str = "./generated_images", model: str = "flux"):
         self.output_dir = output_dir
@@ -21,7 +21,8 @@ class PollinationsImageGenerator(BaseImageGenerator):
 
     def generate(self, prompt: str, negative_prompt: str = "") -> Dict[str, Any]:
         encoded_prompt = urllib.parse.quote(prompt)
-        url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?model={self.model}&nologo=true&width=1024&height=768"
+        # safe=false disables strict censorship filters on Pollinations
+        url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?model={self.model}&nologo=true&safe=false&width=1024&height=768"
         
         # Save locally with safe unique filename
         prompt_hash = str(abs(hash(prompt)))[:8]
@@ -45,7 +46,6 @@ class PollinationsImageGenerator(BaseImageGenerator):
                     "status": "success"
                 }
             else:
-                # If Pollinations has high load, return URL directly so frontend can load it
                 return {
                     "provider": "pollinations",
                     "model": self.model,
@@ -58,7 +58,6 @@ class PollinationsImageGenerator(BaseImageGenerator):
                     "error": f"Download returned {res.status_code}"
                 }
         except Exception as e:
-            # Fallback to direct URL if timeout
             return {
                 "provider": "pollinations",
                 "model": self.model,
@@ -71,7 +70,50 @@ class PollinationsImageGenerator(BaseImageGenerator):
                 "error": str(e)
             }
 
-# 2. Local ComfyUI / Automatic1111 / SD-WebUI Generator
+# 2. Venice AI 100% Uncensored Cloud Generator (Flux & SDXL)
+class VeniceImageGenerator(BaseImageGenerator):
+    def __init__(self, api_key: str = "", output_dir: str = "./generated_images", model: str = "fluently-xl"):
+        self.api_key = api_key or os.environ.get("VENICE_API_KEY", "")
+        self.output_dir = output_dir
+        self.model = model
+        os.makedirs(output_dir, exist_ok=True)
+
+    def generate(self, prompt: str, negative_prompt: str = "") -> Dict[str, Any]:
+        if not self.api_key:
+            # Fallback to Pollinations uncensored if no key
+            return PollinationsImageGenerator(self.output_dir, "flux").generate(prompt, negative_prompt)
+        
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": self.model,
+            "prompt": prompt,
+            "negative_prompt": negative_prompt or "ugly, blurry, lowres",
+            "width": 1024,
+            "height": 768,
+            "hide_watermark": True,
+            "return_binary": True
+        }
+        res = requests.post("https://api.venice.ai/api/v1/image/generate", json=payload, headers=headers, timeout=90)
+        if res.status_code == 200:
+            filename = f"img_venice_{uuid.uuid4().hex[:8]}.webp"
+            filepath = os.path.join(self.output_dir, filename)
+            with open(filepath, "wb") as f:
+                f.write(res.content)
+            return {
+                "provider": "venice",
+                "model": self.model,
+                "prompt": prompt,
+                "local_path": filepath,
+                "filename": filename,
+                "url": f"/generated_images/{filename}",
+                "status": "success"
+            }
+        raise RuntimeError(f"Venice generation failed: {res.text}")
+
+# 3. Local ComfyUI / Automatic1111 / SD-WebUI Generator (100% Uncensored Offline)
 class LocalWebUIGenerator(BaseImageGenerator):
     def __init__(self, base_url: str = "http://127.0.0.1:7860", output_dir: str = "./generated_images"):
         self.base_url = base_url
@@ -112,11 +154,14 @@ def get_image_generator(config: dict) -> BaseImageGenerator:
     """Factory that instantiates any image engine."""
     provider = config.get("provider", "pollinations").lower()
     output_dir = config.get("output_dir", "./generated_images")
+    model_name = config.get("model_name", "flux")
+    api_key = config.get("api_key", "")
     
     if provider == "pollinations":
-        return PollinationsImageGenerator(output_dir=output_dir, model=config.get("model_name", "flux"))
-    elif provider in ("sd_webui", "forge", "automatic1111"):
+        return PollinationsImageGenerator(output_dir=output_dir, model=model_name)
+    elif provider == "venice":
+        return VeniceImageGenerator(api_key=api_key, output_dir=output_dir, model=model_name)
+    elif provider in ("sd_webui", "forge", "automatic1111", "comfyui"):
         return LocalWebUIGenerator(base_url=config.get("base_url", "http://127.0.0.1:7860"), output_dir=output_dir)
     else:
-        # Default fallback to pollinations
         return PollinationsImageGenerator(output_dir=output_dir, model="flux")

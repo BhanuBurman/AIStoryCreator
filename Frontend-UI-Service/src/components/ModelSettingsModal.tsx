@@ -95,11 +95,12 @@ export const ModelSettingsModal: React.FC<Props> = ({ isOpen, onClose, onConfigS
                     onChange={e => {
                       const p = e.target.value;
                       let defaultModel = config.text_model.model_name;
-                      if (p === 'ollama') defaultModel = 'qwen2.5:3b';
+                      if (p === 'ollama') defaultModel = 'dolphin-llama3';
                       if (p === 'groq') defaultModel = 'llama-3.3-70b-versatile';
+                      if (p === 'venice') defaultModel = 'llama-3.3-70b';
                       if (p === 'openai') defaultModel = 'gpt-4o-mini';
                       if (p === 'deepseek') defaultModel = 'deepseek-chat';
-                      if (p === 'openrouter') defaultModel = 'meta-llama/llama-3.3-70b-instruct';
+                      if (p === 'openrouter') defaultModel = 'gryphe/mythomax-l2-13b';
                       setConfig({
                         ...config,
                         text_model: { ...config.text_model, provider: p, model_name: defaultModel }
@@ -107,12 +108,13 @@ export const ModelSettingsModal: React.FC<Props> = ({ isOpen, onClose, onConfigS
                     }}
                     className="w-full bg-noir-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200"
                   >
-                    <option value="groq">Groq Cloud (Free, Zero Download ⚡)</option>
-                    <option value="openai">OpenAI (Cloud, Zero Download)</option>
-                    <option value="deepseek">DeepSeek (Cloud, Zero Download)</option>
-                    <option value="openrouter">OpenRouter (Cloud, Zero Download)</option>
-                    <option value="mock">Offline Demo (Zero Download & No API Key)</option>
-                    <option value="ollama">Ollama (Local Download - ollama.com)</option>
+                    <option value="venice">Venice AI (100% Uncensored Cloud 🔓)</option>
+                    <option value="openrouter">OpenRouter (Uncensored: MythoMax / Hermes 🔓)</option>
+                    <option value="ollama">Ollama Local (Uncensored: dolphin-llama3 💻)</option>
+                    <option value="groq">Groq Cloud (Free, Ultra-Fast ⚡)</option>
+                    <option value="deepseek">DeepSeek (Cloud, High IQ)</option>
+                    <option value="openai">OpenAI (GPT-4o-mini)</option>
+                    <option value="mock">Offline Demo (Zero Setup)</option>
                     <option value="lmstudio">LM Studio (Local Download)</option>
                   </select>
                 </div>
@@ -127,7 +129,7 @@ export const ModelSettingsModal: React.FC<Props> = ({ isOpen, onClose, onConfigS
                       text_model: { ...config.text_model, model_name: e.target.value }
                     })}
                     className="w-full bg-noir-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200"
-                    placeholder="qwen2.5:3b, llama-3.3-70b-versatile"
+                    placeholder="dolphin-llama3, gryphe/mythomax-l2-13b"
                   />
                 </div>
               </div>
@@ -145,13 +147,16 @@ export const ModelSettingsModal: React.FC<Props> = ({ isOpen, onClose, onConfigS
                     className="w-full bg-noir-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 font-mono text-[11px]"
                     placeholder="http://localhost:11434"
                   />
+                  <p className="text-[10px] text-amber-400/90 mt-1">
+                    Tip: Run <code className="bg-noir-950 px-1 py-0.5 rounded">ollama run dolphin-llama3</code> or <code className="bg-noir-950 px-1 py-0.5 rounded">ollama run qwen2.5:7b-instruct-uncensored</code> for zero refusal.
+                  </p>
                 </div>
               )}
 
-              {['openai', 'groq', 'deepseek', 'openrouter'].includes(config.text_model.provider) && (
+              {['openai', 'groq', 'deepseek', 'openrouter', 'venice'].includes(config.text_model.provider) && (
                 <div>
                   <label className="text-[11px] text-slate-400 block mb-1">
-                    {config.text_model.provider.toUpperCase()} API Key (Zero Download)
+                    {config.text_model.provider.toUpperCase()} API Key
                   </label>
                   <input
                     type="password"
@@ -204,8 +209,9 @@ export const ModelSettingsModal: React.FC<Props> = ({ isOpen, onClose, onConfigS
                     })}
                     className="w-full bg-noir-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200"
                   >
-                    <option value="pollinations">Pollinations (Flux - Zero Setup)</option>
-                    <option value="sd_webui">Local SD-WebUI / Forge</option>
+                    <option value="pollinations">Pollinations (Flux Uncensored - Free)</option>
+                    <option value="venice">Venice AI (100% Uncensored Flux/SDXL Cloud 🔓)</option>
+                    <option value="sd_webui">Local SD-WebUI / Forge (100% Uncensored 💻)</option>
                   </select>
                 </div>
 
@@ -219,10 +225,26 @@ export const ModelSettingsModal: React.FC<Props> = ({ isOpen, onClose, onConfigS
                       image_model: { ...config.image_model, model_name: e.target.value }
                     })}
                     className="w-full bg-noir-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200"
-                    placeholder="flux, turbo"
+                    placeholder="flux, fluently-xl, sdxl"
                   />
                 </div>
               </div>
+
+              {config.image_model.provider === 'venice' && (
+                <div>
+                  <label className="text-[11px] text-slate-400 block mb-1">Venice API Key (for uncensored image generation)</label>
+                  <input
+                    type="password"
+                    value={config.image_model.api_key || config.text_model.api_key || ''}
+                    onChange={e => setConfig({
+                      ...config,
+                      image_model: { ...config.image_model, api_key: e.target.value }
+                    })}
+                    className="w-full bg-noir-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 font-mono text-[11px]"
+                    placeholder="Venice API key..."
+                  />
+                </div>
+              )}
 
               {config.image_model.provider === 'sd_webui' && (
                 <div>

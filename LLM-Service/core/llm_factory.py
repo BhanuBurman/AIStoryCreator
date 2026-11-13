@@ -144,6 +144,15 @@ def get_text_model(config: dict) -> BaseChatModel:
             api_key=api_key or os.environ.get("DEEPSEEK_API_KEY", ""),
             temperature=temperature
         )
+    elif provider == "venice":
+        # 100% Uncensored Cloud LLM (Dolphin, Llama 3.3, Hermes)
+        from langchain_openai import ChatOpenAI
+        return ChatOpenAI(
+            model=model_name or "llama-3.3-70b",
+            base_url="https://api.venice.ai/api/v1",
+            api_key=api_key or os.environ.get("VENICE_API_KEY", ""),
+            temperature=temperature
+        )
     elif provider == "openai":
         from langchain_openai import ChatOpenAI
         return ChatOpenAI(

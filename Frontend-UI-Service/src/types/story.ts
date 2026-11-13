@@ -74,5 +74,6 @@ export interface ServiceConfig {
     model_name: string;
     output_dir?: string;
     base_url?: string;
+    api_key?: string;
   };
 }
