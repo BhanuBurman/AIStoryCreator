@@ -23,6 +23,9 @@ export interface CompletedBeat {
   prose: string;
   image_prompt?: string;
   negative_prompt?: string;
+  camera_specs?: string;
+  lighting_setup?: string;
+  film_stock?: string;
   image_url?: string;
   image_local_path?: string;
 }

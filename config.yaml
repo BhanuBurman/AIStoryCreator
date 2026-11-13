@@ -9,7 +9,7 @@ text_model:
   api_key: ""
 
 image_model:
-  provider: "pollinations"     # Options: "pollinations" (free, zero-setup), "comfyui", "diffusers", "sd_webui"
-  model_name: "flux"           # e.g., "flux", "turbo", "realistic-vision"
+  provider: "pollinations"     # Options: "pollinations" (free, zero-setup), "venice", "sd_webui"
+  model_name: "flux-realism"   # "flux-realism" (photorealistic documentary still), "flux"
   output_dir: "./generated_images"
   base_url: "http://127.0.0.1:7860"

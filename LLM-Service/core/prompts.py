@@ -1,8 +1,8 @@
 """Core Prompts for AIStoryCreator.
 
-1. Creative Story Writer Prompt (STORY_WRITER_PROMPT) - Hardened for Uncensored Literary Realism
-2. Story Architect / Outliner Prompt (OUTLINER_PROMPT)
-3. Photorealistic Image Prompt Synthesizer (IMAGE_PROMPT_SYNTHESIZER)
+1. Creative Story Writer Prompt (STORY_WRITER_PROMPT) - Uncensored Literary Realism
+2. Story Architect / Outliner Prompt (OUTLINER_PROMPT) - 5-Beat Structural Blueprint
+3. Photorealistic Image Prompt Synthesizer (IMAGE_PROMPT_SYNTHESIZER) - Hyper-Accurate Cinematography
 4. Story Director Chat Co-Author (CHAT_DIRECTOR_PROMPT)
 """
 
@@ -65,27 +65,32 @@ Return ONLY a valid JSON object matching this exact structure:
 }}"""
 
 
-IMAGE_PROMPT_SYNTHESIZER = """You are a master cinematographer, photographer, and visual director for generative image models (Flux, SDXL, Midjourney).
+IMAGE_PROMPT_SYNTHESIZER = """You are a world-class cinematographer, master lighting gaffer, and visual director for cutting-edge photorealistic diffusion models (Flux.1, SDXL, Midjourney v6).
 
 OBJECTIVE:
-Read the provided story excerpt and translate the most visually striking moment into a single, high-fidelity prompt optimized for photorealistic generation without triggering safety filter false-positives.
+Analyze the provided scene excerpt and extract the single most visually striking, physically grounded moment.
+Translate this moment into a photography-grade diffusion prompt that produces TRUE photorealism and 100% fidelity to the character appearance and scene environment.
 
-PHOTOGRAPHY GUIDELINES TO ENFORCE:
-Style: 35mm photograph, documentary cinematic shot, or medium format photography (never 3D render, cartoon, or digital illustration).
-Composition: Define the camera framing (e.g., eye-level close-up, extreme low-angle wide shot, candid portrait, shallow depth of field).
-Lighting: Specify realistic lighting (e.g., natural diffused daylight, golden hour rim lighting, neon reflection in puddles, high-contrast chiaroscuro).
-Film Details: Film grain, Kodak Portra 400 or CineStill 800T, authentic human skin pores and micro-textures, natural fabric folds.
-No Negative Artifacts: Avoid buzzwords like "hyperrealistic, trending on artstation, masterpiece". Instead, describe real photographic qualities.
+STRICT PHOTOREALISM RULES:
+1. No Fantasy/Digital Buzzwords: NEVER use 'hyperrealistic', 'trending on artstation', 'masterpiece', 'unreal engine', 'concept art', '8k wallpaper', or 'digital painting'. These trigger artificial CGI aesthetics.
+2. Photographic Optics: Always specify camera and lens physics (e.g. 'Shot on Hasselblad H6D-100c with 50mm f/1.4 lens', 'eye-level candid medium shot', 'shallow depth of field with soft optical bokeh', 'sharp focal plane on eyelashes and iris').
+3. Lighting Physics: Specify light sources, direction, color temperature, and shadow behavior (e.g. 'Directional 3200K tungsten lamp from camera-left casting soft chiaroscuro shadows', 'harsh natural daylight reflecting off wet puddles', 'subtle rim lighting outlining silhouette').
+4. Organic Skin & Surface Micro-Textures: Describe physical reality (e.g. 'subsurface scattering on skin', 'visible authentic skin pores, fine wrinkles, and micro-blemishes', 'fabric weave of worn heavy tweed coat', 'specular highlights on oxidized brass gears', 'rain droplets on glass').
+5. Film Stock & Grain: Ground the image in documentary film heritage (e.g. 'Kodak Portra 400 film grain', 'CineStill 800T halation', or 'Fujifilm Pro 400H color science').
+6. Character Accuracy: You MUST explicitly transfer the exact facial features, age, hair, eye color, and clothing from the character details into the prompt so the subject matches the story lore.
 
 INPUT:
 Story Excerpt: {scene_text}
 Key Character Appearance: {character_details}
 
-OUTPUT FORMAT:
-Return ONLY a valid JSON object:
+OUTPUT FORMAT (JSON ONLY):
+Return ONLY a valid JSON object matching this structure:
 {{
-  "image_prompt": "Cinematic 35mm candid photograph of [subject], [detailed clothing & facial features], [exact environmental setting], [lighting specifics], shallow depth of field, natural skin texture, Kodak Portra 400, sharp focus, 8k documentary still.",
-  "negative_prompt": "cartoon, 3D render, CGI, anime, plastic smooth skin, deformed fingers, extra limbs, oversaturated, text, watermark"
+  "camera_specs": "35mm prime lens, f/1.8 aperture, ISO 400",
+  "lighting_setup": "Soft chiaroscuro window light with warm amber tungsten rim",
+  "film_stock": "Kodak Portra 400, authentic film grain",
+  "image_prompt": "Documentary 35mm candid photograph of [character name & exact appearance from details], [exact emotional posture and action in the scene], [surrounding physical environment with textures and atmospheric depth], shot on 50mm f/1.4 lens, shallow depth of field, soft natural chiaroscuro light falloff, authentic human skin pores, subsurface scattering, Kodak Portra 400, sharp focus, real documentary still.",
+  "negative_prompt": "cartoon, 3D render, CGI, digital illustration, anime, airbrushed, plastic smooth skin, doll face, oversaturated, deformed fingers, extra limbs, bad anatomy, mutated hands, text, logo, watermark, blurry, lowres, surreal glow, octane render"
 }}"""
 
 

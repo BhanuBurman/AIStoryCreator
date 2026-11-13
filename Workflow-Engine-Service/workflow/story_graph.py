@@ -114,10 +114,16 @@ class StoryWorkflowOrchestrator:
         synth_res = requests.post(f"{self.llm_service_url}/api/llm/synthesize-image-prompt", json=synth_payload, timeout=60)
         img_prompt = ""
         neg_prompt = ""
+        camera_specs = None
+        lighting_setup = None
+        film_stock = None
         if synth_res.status_code == 200:
             s_data = synth_res.json().get("synthesis", {})
             img_prompt = s_data.get("image_prompt", "")
             neg_prompt = s_data.get("negative_prompt", "")
+            camera_specs = s_data.get("camera_specs")
+            lighting_setup = s_data.get("lighting_setup")
+            film_stock = s_data.get("film_stock")
 
         # 3. Generate Image
         image_url = None
@@ -144,6 +150,9 @@ class StoryWorkflowOrchestrator:
             prose=prose,
             image_prompt=img_prompt,
             negative_prompt=neg_prompt,
+            camera_specs=camera_specs,
+            lighting_setup=lighting_setup,
+            film_stock=film_stock,
             image_url=image_url,
             image_local_path=image_local_path
         )
@@ -207,6 +216,9 @@ class StoryWorkflowOrchestrator:
         s_data = synth_res.json().get("synthesis", {})
         img_prompt = s_data.get("image_prompt", "")
         neg_prompt = s_data.get("negative_prompt", "")
+        camera_specs = s_data.get("camera_specs")
+        lighting_setup = s_data.get("lighting_setup")
+        film_stock = s_data.get("film_stock")
 
         img_gen_res = requests.post(
             f"{self.llm_service_url}/api/image/generate",
@@ -222,6 +234,9 @@ class StoryWorkflowOrchestrator:
             prose=prose,
             image_prompt=img_prompt,
             negative_prompt=neg_prompt,
+            camera_specs=camera_specs,
+            lighting_setup=lighting_setup,
+            film_stock=film_stock,
             image_url=img_data.get("url"),
             image_local_path=img_data.get("local_path")
         )

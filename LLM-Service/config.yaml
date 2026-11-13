@@ -7,7 +7,7 @@ text_model:
   api_key: ""                  # Required for OpenAI provider or cloud models
 
 image_model:
-  provider: "pollinations"     # Options: "pollinations" (free, no setup), "comfyui", "diffusers", "sd_webui"
-  model_name: "flux"           # e.g., "flux", "turbo", "realistic-vision"
+  provider: "pollinations"     # Options: "pollinations" (free Flux), "venice", "sd_webui"
+  model_name: "flux-realism"   # "flux-realism" (highest photorealism & prompt accuracy), "flux"
   output_dir: "./generated_images"
   base_url: "http://127.0.0.1:7860"

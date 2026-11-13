@@ -23,6 +23,9 @@ class CompletedBeat(BaseModel):
     prose: str
     image_prompt: Optional[str] = None
     negative_prompt: Optional[str] = None
+    camera_specs: Optional[str] = None
+    lighting_setup: Optional[str] = None
+    film_stock: Optional[str] = None
     image_url: Optional[str] = None
     image_local_path: Optional[str] = None
 
