@@ -7,7 +7,7 @@ from langchain_core.messages import BaseMessage, AIMessage
 from langchain_core.outputs import ChatResult, ChatGeneration
 
 class MockStoryChatModel(BaseChatModel):
-    """Fallback / Mock LLM for local testing when Ollama or OpenAI endpoints are not running."""
+    """Fallback / Mock LLM for zero-download instant testing when local models are not running."""
     model_name: str = "mock-story-model"
     temperature: float = 0.7
 
@@ -26,12 +26,13 @@ class MockStoryChatModel(BaseChatModel):
         
         # Check if Outliner prompt was called
         if "story architect" in full_prompt.lower() or "5-beat story blueprint" in full_prompt.lower() or "plot_beats" in full_prompt.lower():
-            # Extract concept if possible
             title = "The Obsidian Clockmaker"
             if "Title / Idea:" in full_prompt:
                 match = re.search(r"Title / Idea:\s*(.+)", full_prompt)
                 if match:
-                    title = match.group(1).split("\n")[0].strip() or title
+                    extracted = match.group(1).split("\n")[0].strip()
+                    if extracted and len(extracted) > 2:
+                        title = extracted
             
             content = json.dumps({
                 "title": title,
@@ -85,8 +86,8 @@ class MockStoryChatModel(BaseChatModel):
             )
         else:
             content = (
-                f"Welcome to AI Story Creator. I am ready to craft, outline, and visualize your next narrative. "
-                f"Give me a title, concept, or genre to begin."
+                "Welcome to AI Story Creator. I am your Story Director co-author. "
+                "Pitch me any concept, character, or moral dilemma and I will outline the 5-beat spine."
             )
 
         message = AIMessage(content=content)
@@ -100,7 +101,7 @@ def get_text_model(config: dict) -> BaseChatModel:
     model_name = config.get("model_name", "qwen2.5:3b")
     temperature = config.get("temperature", 0.7)
     base_url = config.get("base_url")
-    api_key = config.get("api_key") or os.environ.get("OPENAI_API_KEY", "not-needed")
+    api_key = config.get("api_key") or os.environ.get("OPENAI_API_KEY", "")
 
     if provider == "ollama":
         from langchain_ollama import ChatOllama
@@ -110,7 +111,6 @@ def get_text_model(config: dict) -> BaseChatModel:
             temperature=temperature
         )
     elif provider in ("lmstudio", "vllm", "local_openai"):
-        # Works with any local server running an OpenAI-compatible endpoint
         from langchain_openai import ChatOpenAI
         return ChatOpenAI(
             model=model_name,
@@ -118,10 +118,36 @@ def get_text_model(config: dict) -> BaseChatModel:
             api_key=api_key or "not-needed",
             temperature=temperature
         )
+    elif provider == "groq":
+        # Free cloud inference (Zero local download required)
+        from langchain_openai import ChatOpenAI
+        return ChatOpenAI(
+            model=model_name or "llama-3.3-70b-versatile",
+            base_url="https://api.groq.com/openai/v1",
+            api_key=api_key or os.environ.get("GROQ_API_KEY", ""),
+            temperature=temperature
+        )
+    elif provider == "openrouter":
+        # Any open-source or proprietary model via OpenRouter
+        from langchain_openai import ChatOpenAI
+        return ChatOpenAI(
+            model=model_name or "meta-llama/llama-3.3-70b-instruct",
+            base_url="https://openrouter.ai/api/v1",
+            api_key=api_key or os.environ.get("OPENROUTER_API_KEY", ""),
+            temperature=temperature
+        )
+    elif provider == "deepseek":
+        from langchain_openai import ChatOpenAI
+        return ChatOpenAI(
+            model=model_name or "deepseek-chat",
+            base_url="https://api.deepseek.com",
+            api_key=api_key or os.environ.get("DEEPSEEK_API_KEY", ""),
+            temperature=temperature
+        )
     elif provider == "openai":
         from langchain_openai import ChatOpenAI
         return ChatOpenAI(
-            model=model_name,
+            model=model_name or "gpt-4o-mini",
             temperature=temperature,
             api_key=api_key or os.environ.get("OPENAI_API_KEY")
         )

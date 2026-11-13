@@ -92,17 +92,28 @@ export const ModelSettingsModal: React.FC<Props> = ({ isOpen, onClose, onConfigS
                   <label className="text-[11px] text-slate-400 block mb-1">Provider</label>
                   <select
                     value={config.text_model.provider}
-                    onChange={e => setConfig({
-                      ...config,
-                      text_model: { ...config.text_model, provider: e.target.value }
-                    })}
+                    onChange={e => {
+                      const p = e.target.value;
+                      let defaultModel = config.text_model.model_name;
+                      if (p === 'ollama') defaultModel = 'qwen2.5:3b';
+                      if (p === 'groq') defaultModel = 'llama-3.3-70b-versatile';
+                      if (p === 'openai') defaultModel = 'gpt-4o-mini';
+                      if (p === 'deepseek') defaultModel = 'deepseek-chat';
+                      if (p === 'openrouter') defaultModel = 'meta-llama/llama-3.3-70b-instruct';
+                      setConfig({
+                        ...config,
+                        text_model: { ...config.text_model, provider: p, model_name: defaultModel }
+                      });
+                    }}
                     className="w-full bg-noir-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200"
                   >
-                    <option value="ollama">Ollama (Local)</option>
-                    <option value="lmstudio">LM Studio (Local)</option>
-                    <option value="openai">OpenAI (Cloud)</option>
-                    <option value="vllm">vLLM / Local OpenAI</option>
-                    <option value="mock">Offline / Mock Demo</option>
+                    <option value="groq">Groq Cloud (Free, Zero Download ⚡)</option>
+                    <option value="openai">OpenAI (Cloud, Zero Download)</option>
+                    <option value="deepseek">DeepSeek (Cloud, Zero Download)</option>
+                    <option value="openrouter">OpenRouter (Cloud, Zero Download)</option>
+                    <option value="mock">Offline Demo (Zero Download & No API Key)</option>
+                    <option value="ollama">Ollama (Local Download - ollama.com)</option>
+                    <option value="lmstudio">LM Studio (Local Download)</option>
                   </select>
                 </div>
 
@@ -116,28 +127,32 @@ export const ModelSettingsModal: React.FC<Props> = ({ isOpen, onClose, onConfigS
                       text_model: { ...config.text_model, model_name: e.target.value }
                     })}
                     className="w-full bg-noir-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200"
-                    placeholder="qwen2.5:3b, gpt-4o-mini"
+                    placeholder="qwen2.5:3b, llama-3.3-70b-versatile"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="text-[11px] text-slate-400 block mb-1">Base URL</label>
-                <input
-                  type="text"
-                  value={config.text_model.base_url || ''}
-                  onChange={e => setConfig({
-                    ...config,
-                    text_model: { ...config.text_model, base_url: e.target.value }
-                  })}
-                  className="w-full bg-noir-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 font-mono text-[11px]"
-                  placeholder="http://localhost:11434"
-                />
-              </div>
-
-              {config.text_model.provider === 'openai' && (
+              {['ollama', 'lmstudio', 'vllm'].includes(config.text_model.provider) && (
                 <div>
-                  <label className="text-[11px] text-slate-400 block mb-1">OpenAI API Key</label>
+                  <label className="text-[11px] text-slate-400 block mb-1">Local Server Base URL</label>
+                  <input
+                    type="text"
+                    value={config.text_model.base_url || ''}
+                    onChange={e => setConfig({
+                      ...config,
+                      text_model: { ...config.text_model, base_url: e.target.value }
+                    })}
+                    className="w-full bg-noir-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 font-mono text-[11px]"
+                    placeholder="http://localhost:11434"
+                  />
+                </div>
+              )}
+
+              {['openai', 'groq', 'deepseek', 'openrouter'].includes(config.text_model.provider) && (
+                <div>
+                  <label className="text-[11px] text-slate-400 block mb-1">
+                    {config.text_model.provider.toUpperCase()} API Key (Zero Download)
+                  </label>
                   <input
                     type="password"
                     value={config.text_model.api_key || ''}
@@ -146,7 +161,7 @@ export const ModelSettingsModal: React.FC<Props> = ({ isOpen, onClose, onConfigS
                       text_model: { ...config.text_model, api_key: e.target.value }
                     })}
                     className="w-full bg-noir-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 font-mono text-[11px]"
-                    placeholder="sk-..."
+                    placeholder="Enter API key..."
                   />
                 </div>
               )}
