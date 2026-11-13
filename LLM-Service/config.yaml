@@ -1,0 +1,13 @@
+# Pluggable Text & Image Model Architecture
+text_model:
+  provider: "ollama"           # Options: "ollama", "lmstudio", "openai", "vllm", "mock"
+  model_name: "qwen2.5:3b"     # e.g., "qwen2.5:3b", "qwen2.5:7b-instruct-uncensored", "gpt-4o-mini"
+  base_url: "http://localhost:11434"
+  temperature: 0.8
+  api_key: ""                  # Required for OpenAI provider or cloud models
+
+image_model:
+  provider: "pollinations"     # Options: "pollinations" (free, no setup), "comfyui", "diffusers", "sd_webui"
+  model_name: "flux"           # e.g., "flux", "turbo", "realistic-vision"
+  output_dir: "./generated_images"
+  base_url: "http://127.0.0.1:7860"

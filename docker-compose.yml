@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  llm-service:
+    build:
+      context: ./LLM-Service
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./LLM-Service/config.yaml:/app/config.yaml
+      - ./LLM-Service/generated_images:/app/generated_images
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+  workflow-engine-service:
+    build:
+      context: ./Workflow-Engine-Service
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./Workflow-Engine-Service/storage:/app/storage
+    environment:
+      - LLM_SERVICE_URL=http://llm-service:8001
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - llm-service
+    restart: unless-stopped
+
+  frontend-ui-service:
+    build:
+      context: ./Frontend-UI-Service
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - workflow-engine-service
+    restart: unless-stopped
