@@ -8,6 +8,16 @@ if (-not (Test-Path $VENV_PYTHON)) {
     $VENV_PYTHON = "python"
 }
 
+# 0. Ensure Ollama daemon is active
+Write-Host "[0/3] Checking Ollama Engine on http://127.0.0.1:11434..." -ForegroundColor Cyan
+try {
+    $res = Invoke-RestMethod -Uri "http://127.0.0.1:11434/api/tags" -TimeoutSec 1 -ErrorAction Stop
+} catch {
+    Write-Host "Launching local Ollama daemon in background..." -ForegroundColor Yellow
+    Start-Process "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe" -ArgumentList "serve" -WindowStyle Hidden
+    Start-Sleep -Seconds 2
+}
+
 # 1. Start LLM-Service (Port 8001)
 Write-Host "[1/3] Launching LLM-Service on http://localhost:8001..." -ForegroundColor Yellow
 $llmProcess = Start-Process -FilePath $VENV_PYTHON -ArgumentList "-m", "uvicorn", "main:app", "--port", "8001", "--reload" -WorkingDirectory "$PSScriptRoot\LLM-Service" -PassThru

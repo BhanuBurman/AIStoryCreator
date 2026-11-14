@@ -9,6 +9,14 @@ if not exist "%VENV_PYTHON%" (
     set VENV_PYTHON=python
 )
 
+echo [0/3] Ensuring Ollama Engine is running on http://127.0.0.1:11434...
+curl -s --connect-timeout 2 http://127.0.0.1:11434/api/tags >nul 2>&1
+if %errorlevel% neq 0 (
+    echo Starting local Ollama engine in background...
+    start /b "" "%LOCALAPPDATA%\Programs\Ollama\ollama.exe" serve >nul 2>&1
+    timeout /t 2 /nobreak >nul
+)
+
 echo [1/3] Launching LLM-Service on http://localhost:8001...
 start "LLM-Service (8001)" cmd /k "cd /d %~dp0LLM-Service && "%VENV_PYTHON%" -m uvicorn main:app --port 8001 --reload"
 
