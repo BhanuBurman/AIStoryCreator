@@ -13,9 +13,9 @@ Write-Host "[0/3] Checking Ollama Engine on http://127.0.0.1:11434..." -Foregrou
 try {
     $res = Invoke-RestMethod -Uri "http://127.0.0.1:11434/api/tags" -TimeoutSec 1 -ErrorAction Stop
 } catch {
-    Write-Host "Launching local Ollama daemon in background..." -ForegroundColor Yellow
-    Start-Process "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe" -ArgumentList "serve" -WindowStyle Hidden
-    Start-Sleep -Seconds 2
+    Write-Host "Launching local Ollama app in background..." -ForegroundColor Yellow
+    Start-Process "$env:LOCALAPPDATA\Programs\Ollama\ollama app.exe"
+    Start-Sleep -Seconds 3
 }
 
 # 1. Start LLM-Service (Port 8001)

@@ -13,8 +13,8 @@ echo [0/3] Ensuring Ollama Engine is running on http://127.0.0.1:11434...
 curl -s --connect-timeout 2 http://127.0.0.1:11434/api/tags >nul 2>&1
 if %errorlevel% neq 0 (
     echo Starting local Ollama engine in background...
-    start /b "" "%LOCALAPPDATA%\Programs\Ollama\ollama.exe" serve >nul 2>&1
-    timeout /t 2 /nobreak >nul
+    start "" "%LOCALAPPDATA%\Programs\Ollama\ollama app.exe"
+    timeout /t 3 /nobreak >nul
 )
 
 echo [1/3] Launching LLM-Service on http://localhost:8001...
