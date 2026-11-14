@@ -5,7 +5,7 @@ import yaml
 from typing import Dict, Any, Optional, List
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
-from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
 from core.llm_factory import get_text_model, MockStoryChatModel
 from core.image_factory import get_image_generator
@@ -13,7 +13,10 @@ from core.prompts import (
     STORY_WRITER_PROMPT,
     OUTLINER_PROMPT,
     IMAGE_PROMPT_SYNTHESIZER,
-    CHAT_DIRECTOR_PROMPT
+    CHAT_DIRECTOR_PROMPT,
+    GENERAL_ASSISTANT_PROMPT,
+    UNCENSORED_CREATIVE_PROMPT,
+    CODE_EXPERT_PROMPT
 )
 
 router = APIRouter()
@@ -78,6 +81,10 @@ class ImageGenerateRequest(BaseModel):
 class ChatRequest(BaseModel):
     messages: List[Dict[str, str]]  # role: user/assistant, content: text
     system_instruction: Optional[str] = None
+    model_name: Optional[str] = None
+    provider: Optional[str] = None
+    temperature: Optional[float] = None
+    generate_image: Optional[bool] = False
 
 class ConfigUpdateRequest(BaseModel):
     text_model: Optional[Dict[str, Any]] = None
@@ -212,18 +219,116 @@ def generate_image(req: ImageGenerateRequest):
     )
     return result
 
-@router.post("/llm/chat")
-def chat_with_director(req: ChatRequest):
-    """Interactive conversational chat with Story Director."""
-    cfg = load_config()
-    text_cfg = cfg.get("text_model", {})
+@router.get("/llm/models")
+def list_available_models():
+    """List all locally installed Ollama models and persona presets."""
+    local_models = []
+    try:
+        res = requests.get("http://127.0.0.1:11434/api/tags", timeout=3)
+        if res.status_code == 200:
+            for item in res.json().get("models", []):
+                local_models.append({
+                    "name": item.get("name"),
+                    "size": item.get("size"),
+                    "parameter_size": item.get("details", {}).get("parameter_size", "Unknown"),
+                    "provider": "ollama"
+                })
+    except Exception:
+        pass
 
-    messages = [SystemMessage(content=req.system_instruction or CHAT_DIRECTOR_PROMPT)]
+    return {
+        "local_models": local_models,
+        "presets": [
+            {
+                "id": "general",
+                "name": "General Assistant (ChatGPT / Claude)",
+                "description": "Insightful, articulate, comprehensive across coding, science & all topics.",
+                "prompt": GENERAL_ASSISTANT_PROMPT
+            },
+            {
+                "id": "uncensored",
+                "name": "100% Uncensored Creative",
+                "description": "Raw, unfiltered creative partner for gritty fiction and deep dialogue.",
+                "prompt": UNCENSORED_CREATIVE_PROMPT
+            },
+            {
+                "id": "code",
+                "name": "Software Engineer & Code Architect",
+                "description": "Production-grade code, algorithm design, bug hunting, and architecture.",
+                "prompt": CODE_EXPERT_PROMPT
+            },
+            {
+                "id": "story",
+                "name": "Story Director & Novelist",
+                "description": "Narrative pacing, 5-beat plotting, character arcs, and world-building.",
+                "prompt": CHAT_DIRECTOR_PROMPT
+            }
+        ]
+    }
+
+@router.post("/llm/chat")
+def chat_with_assistant(req: ChatRequest):
+    """Interactive conversational chat like ChatGPT/Claude, with optional image rendering."""
+    cfg = load_config()
+    text_cfg = dict(cfg.get("text_model", {}))
+    image_cfg = dict(cfg.get("image_model", {}))
+
+    # Allow request-level overrides for instant model switching
+    if req.model_name:
+        text_cfg["model_name"] = req.model_name
+    if req.provider:
+        text_cfg["provider"] = req.provider
+    if req.temperature is not None:
+        text_cfg["temperature"] = req.temperature
+
+    # Check if the user's latest prompt asks for an image
+    last_user_msg = ""
+    for msg in reversed(req.messages):
+        if msg.get("role") == "user":
+            last_user_msg = msg.get("content", "").strip()
+            break
+
+    # If it's an image command or image mode is toggled
+    is_image_cmd = any(last_user_msg.lower().startswith(p) for p in ("/image ", "/draw ", "/imagine ", "/photo "))
+    if req.generate_image or is_image_cmd:
+        image_prompt = last_user_msg
+        for prefix in ("/image ", "/draw ", "/imagine ", "/photo "):
+            if image_prompt.lower().startswith(prefix):
+                image_prompt = image_prompt[len(prefix):].strip()
+                break
+
+        try:
+            generator = get_image_generator(image_cfg)
+            img_result = generator.generate(
+                prompt=image_prompt,
+                negative_prompt="cartoon, 3D render, CGI, anime, plastic smooth skin, deformed fingers, text, watermark"
+            )
+            return {
+                "status": "success",
+                "provider": text_cfg.get("provider"),
+                "model_name": text_cfg.get("model_name"),
+                "message": f"I've generated a photorealistic 35mm image for: **\"{image_prompt}\"**",
+                "image": img_result
+            }
+        except Exception as e:
+            return {
+                "status": "partial",
+                "provider": text_cfg.get("provider"),
+                "model_name": text_cfg.get("model_name"),
+                "message": f"Image generation encountered an issue: {str(e)}"
+            }
+
+    # Otherwise standard conversational completion
+    messages = [SystemMessage(content=req.system_instruction or GENERAL_ASSISTANT_PROMPT)]
     for msg in req.messages:
-        if msg.get("role") == "assistant":
-            messages.append(SystemMessage(content=msg.get("content", "")))
+        role = msg.get("role", "user")
+        content = msg.get("content", "")
+        if role == "assistant":
+            messages.append(AIMessage(content=content))
+        elif role == "system":
+            messages.append(SystemMessage(content=content))
         else:
-            messages.append(HumanMessage(content=msg.get("content", "")))
+            messages.append(HumanMessage(content=content))
 
     try:
         model = get_text_model(text_cfg)
@@ -231,6 +336,7 @@ def chat_with_director(req: ChatRequest):
         return {
             "status": "success",
             "provider": text_cfg.get("provider"),
+            "model_name": text_cfg.get("model_name"),
             "message": response.content
         }
     except Exception as e:
@@ -239,5 +345,7 @@ def chat_with_director(req: ChatRequest):
         return {
             "status": "fallback_success",
             "warning": f"Model failed: {str(e)}",
+            "provider": "fallback",
+            "model_name": "mock",
             "message": response.content
         }

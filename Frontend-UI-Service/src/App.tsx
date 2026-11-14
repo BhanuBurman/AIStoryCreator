@@ -19,8 +19,11 @@ import { CharacterCards } from './components/CharacterCards';
 import { StoryReader } from './components/StoryReader';
 import { ChatInterface } from './components/ChatInterface';
 import { ModelSettingsModal } from './components/ModelSettingsModal';
+import { GeneralChatInterface } from './components/GeneralChatInterface';
+import { MessageSquare } from 'lucide-react';
 
 export const App: React.FC = () => {
+  const [viewMode, setViewMode] = useState<'chat' | 'story'>('chat');
   const [activeStory, setActiveStory] = useState<StoryState | null>(null);
   const [storiesList, setStoriesList] = useState<StoryListItem[]>([]);
   const [selectedActIndex, setSelectedActIndex] = useState<number>(0);
@@ -167,6 +170,25 @@ export const App: React.FC = () => {
     setSelectedActIndex(0);
   };
 
+  if (viewMode === 'chat') {
+    return (
+      <>
+        <GeneralChatInterface
+          onOpenSettings={() => setSettingsOpen(true)}
+          onSwitchToStoryStudio={() => setViewMode('story')}
+        />
+        <ModelSettingsModal
+          isOpen={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          onConfigSaved={() => {
+            loadConfig();
+            checkStatus();
+          }}
+        />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-noir-900 text-slate-100">
       {/* Top Navbar */}
@@ -211,6 +233,15 @@ export const App: React.FC = () => {
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setViewMode('chat')}
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 flex items-center gap-1.5 transition-all shadow-sm"
+              title="Switch to General AI Chatbot (ChatGPT / Claude style)"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-amber-400" />
+              <span>AI Chat</span>
+            </button>
+
             <button
               onClick={() => setHistoryOpen(!historyOpen)}
               className="px-3 py-1.5 rounded-xl text-xs font-medium bg-noir-800 hover:bg-noir-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-colors"

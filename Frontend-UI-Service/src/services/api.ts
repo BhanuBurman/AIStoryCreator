@@ -117,5 +117,42 @@ export const api = {
       if (r2.ok) workflow = true;
     } catch {}
     return { llm, workflow };
+  },
+
+  // General Chat (ChatGPT / Claude Style)
+  async generalChat(params: {
+    messages: { role: 'user' | 'assistant' | 'system'; content: string }[];
+    system_instruction?: string;
+    model_name?: string;
+    provider?: string;
+    temperature?: number;
+    generate_image?: boolean;
+  }): Promise<{
+    status: string;
+    message: string;
+    model_name?: string;
+    provider?: string;
+    image?: any;
+    warning?: string;
+  }> {
+    const res = await fetch(`${LLM_BASE}/llm/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to generate response' }));
+      throw new Error(err.detail || 'Failed to generate response');
+    }
+    return res.json();
+  },
+
+  async getAvailableModels(): Promise<{
+    local_models: Array<{ name: string; size: number; parameter_size: string; provider: string }>;
+    presets: Array<{ id: string; name: string; description: string; prompt: string }>;
+  }> {
+    const res = await fetch(`${LLM_BASE}/llm/models`);
+    if (!res.ok) throw new Error('Failed to fetch models');
+    return res.json();
   }
 };

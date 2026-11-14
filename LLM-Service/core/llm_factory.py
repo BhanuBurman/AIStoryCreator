@@ -86,8 +86,7 @@ class MockStoryChatModel(BaseChatModel):
             )
         else:
             content = (
-                "Welcome to AI Story Creator. I am your Story Director co-author. "
-                "Pitch me any concept, character, or moral dilemma and I will outline the 5-beat spine."
+                "Hello! I am your AI assistant, ready to assist with general conversation, coding, analysis, creative ideation, or writing. How can I help you today?"
             )
 
         message = AIMessage(content=content)

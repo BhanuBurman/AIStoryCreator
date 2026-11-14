@@ -1,7 +1,7 @@
 # Pluggable Text & Image Model Architecture
 text_model:
   provider: "ollama"           # Options: "ollama", "lmstudio", "openai", "vllm", "mock"
-  model_name: "qwen2.5:3b"     # e.g., "qwen2.5:3b", "qwen2.5:7b-instruct-uncensored", "gpt-4o-mini"
+  model_name: "dolphin-llama3"     # e.g., "dolphin-llama3", "qwen2.5:3b", "gpt-4o-mini"
   base_url: "http://localhost:11434"
   temperature: 0.8
   api_key: ""                  # Required for OpenAI provider or cloud models

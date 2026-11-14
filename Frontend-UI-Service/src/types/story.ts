@@ -80,3 +80,29 @@ export interface ServiceConfig {
     api_key?: string;
   };
 }
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: string;
+  model_name?: string;
+  image?: {
+    url?: string;
+    local_path?: string;
+    prompt?: string;
+    seed?: number;
+    filename?: string;
+  };
+  error?: boolean;
+}
+
+export interface ChatConversation {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  presetId: string;
+  modelName: string;
+  createdAt: string;
+  updatedAt: string;
+}
