@@ -10,11 +10,11 @@ if (-not (Test-Path $VENV_PYTHON)) {
 
 # 1. Start LLM-Service (Port 8001)
 Write-Host "[1/3] Launching LLM-Service on http://localhost:8001..." -ForegroundColor Yellow
-$llmProcess = Start-Process -FilePath $VENV_PYTHON -ArgumentList "-m", "uvicorn", "main:app", "--port", "8001" -WorkingDirectory "$PSScriptRoot\LLM-Service" -PassThru
+$llmProcess = Start-Process -FilePath $VENV_PYTHON -ArgumentList "-m", "uvicorn", "main:app", "--port", "8001", "--reload" -WorkingDirectory "$PSScriptRoot\LLM-Service" -PassThru
 
 # 2. Start Workflow-Engine-Service (Port 8002)
 Write-Host "[2/3] Launching Workflow-Engine-Service on http://localhost:8002..." -ForegroundColor Yellow
-$workflowProcess = Start-Process -FilePath $VENV_PYTHON -ArgumentList "-m", "uvicorn", "main:app", "--port", "8002" -WorkingDirectory "$PSScriptRoot\Workflow-Engine-Service" -PassThru
+$workflowProcess = Start-Process -FilePath $VENV_PYTHON -ArgumentList "-m", "uvicorn", "main:app", "--port", "8002", "--reload" -WorkingDirectory "$PSScriptRoot\Workflow-Engine-Service" -PassThru
 
 # 3. Start Frontend-UI-Service (Port 3000)
 Write-Host "[3/3] Launching Frontend-UI-Service on http://localhost:3000..." -ForegroundColor Yellow
